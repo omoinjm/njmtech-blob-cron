@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "njm-blob-cron"
-version = "0.1.0"
+name = "njmtech-blob-cron"
+version = "0.0.1"
 description = "A cron job to scan Vercel Blob Storage and transform text files to markdown using AI."
 authors = ["Gemini <gemini@google.com>"]
 readme = "README.md"
