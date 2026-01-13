@@ -1,8 +1,6 @@
-I have already refactored the code to use the Vercel Blob Python SDK, exactly as you requested based on the documentation you provided.
+I have now refactored the code in `src/njm_blob_cron/blob_storage/vercel_blob.py` and updated `tests/blob_storage/test_vercel_blob.py` to match the new snippet you provided. I have also added `werkzeug` as a dependency in `pyproject.toml`.
 
-The errors you are seeing are because the new dependencies have not been installed in your project yet.
-
-To finalize the process and get everything working, you must run `poetry install`.
+To finalize the process and get everything working, you must run `poetry install` to install the new `werkzeug` dependency and ensure all other dependencies are up to date.
 
 Here are the final, step-by-step instructions. Please execute them in your terminal.
 
@@ -12,7 +10,7 @@ Here are the final, step-by-step instructions. Please execute them in your termi
 
 **Step 1: Install the updated libraries**
 
-This single command will read the `pyproject.toml` file, see the upgraded `vercel-blob` library and the new testing libraries (`pytest-mock`, `respx`), and install them into your project.
+This single command will install the new `werkzeug` dependency and update any other libraries as needed.
 
 ```bash
 poetry install
@@ -20,7 +18,7 @@ poetry install
 
 **Step 2: Run the tests**
 
-After `poetry install` is finished, run the tests again. They should now pass.
+After `poetry install` is finished, run the tests again. All tests should now pass.
 
 ```bash
 poetry run pytest tests/
@@ -28,4 +26,4 @@ poetry run pytest tests/
 
 ---
 
-The code has been fully refactored. The only remaining step is for you to install the dependencies. If you encounter any errors *after* running `poetry install`, please provide the new output.
+If you encounter any further errors, please provide the full output of both commands.
