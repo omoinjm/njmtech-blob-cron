@@ -5,9 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Vercel Blob Storage Configuration
-BLOB_API_URL = os.getenv("BLOB_API_URL")
-VERCEL_BLOB_TOKEN = os.getenv("VERCEL_BLOB_TOKEN")
-BLOB_STORE_ID = os.getenv("BLOB_STORE_ID")
+BLOB_READ_WRITE_TOKEN = os.getenv("BLOB_READ_WRITE_TOKEN")
 
 # AI Model Configuration (Ollama)
 OLLAMA_MODEL_ID = os.getenv("OLLAMA_MODEL_ID", "llama3.2")
@@ -20,9 +18,7 @@ ROOT_SCAN_FOLDER = os.getenv("ROOT_SCAN_FOLDER", "njmtech-blob-api")
 def validate_config():
     """Validates that all required environment variables are set."""
     required_vars = [
-        "BLOB_API_URL",
-        "VERCEL_BLOB_TOKEN",
-        "BLOB_STORE_ID",
+        "BLOB_READ_WRITE_TOKEN",
     ]
     missing_vars = [var for var in required_vars if not globals()[var]]
     if missing_vars:

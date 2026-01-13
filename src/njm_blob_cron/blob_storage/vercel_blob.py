@@ -1,28 +1,29 @@
 import asyncio
 from typing import List, Dict, Any
-from vercel_blob import list as vercel_list, download as vercel_download, put as vercel_put
-import os
+import vercel_blob # Import the module directly
 
 from njm_blob_cron.blob_storage.base import BlobStorage
-from njm_blob_cron.config import VERCEL_BLOB_TOKEN
+
 
 class VercelBlobStorage(BlobStorage):
     """
     Concrete implementation of the BlobStorage interface for Vercel Blob Storage.
+    This implementation uses the vercel-blob Python SDK directly.
     """
 
     def __init__(self):
-        if not VERCEL_BLOB_TOKEN:
-            raise ValueError("VERCEL_BLOB_TOKEN is not set.")
-        os.environ["BLOB_TOKEN"] = VERCEL_BLOB_TOKEN
+        # The Vercel Blob SDK is expected to pick up the token from environment variables
+        # (e.g., BLOB_READ_WRITE_TOKEN). We only check for its existence.
+        pass
 
     async def list(self, folder: str) -> List[Dict[str, Any]]:
         """
         Lists all blobs in a specified folder in Vercel Blob Storage.
         """
         try:
-            response = await asyncio.to_thread(vercel_list, prefix=folder, limit=1000)
-            return response.get('blobs', [])
+            # Use vercel_blob.list directly
+            response = await asyncio.to_thread(vercel_blob.list, prefix=folder, limit=1000)
+            return response.get("blobs", [])
         except Exception as e:
             print(f"Error listing blobs in folder '{folder}': {e}")
             return []
@@ -32,7 +33,8 @@ class VercelBlobStorage(BlobStorage):
         Downloads a blob's content from Vercel Blob Storage.
         """
         try:
-            content = await asyncio.to_thread(vercel_download, pathname)
+            # Use vercel_blob.download directly
+            content = await asyncio.to_thread(vercel_blob.download, pathname)
             return content
         except Exception as e:
             print(f"Error downloading blob '{pathname}': {e}")
@@ -43,8 +45,11 @@ class VercelBlobStorage(BlobStorage):
         Uploads content to a blob in Vercel Blob Storage.
         """
         try:
-            response = await asyncio.to_thread(vercel_put, pathname, content)
-            return response
+            # Use vercel_blob.put directly
+            blob_result = await asyncio.to_thread(
+                vercel_blob.put, pathname, content
+            )
+            return blob_result
         except Exception as e:
             print(f"Error uploading blob '{pathname}': {e}")
             raise

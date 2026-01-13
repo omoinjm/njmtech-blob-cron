@@ -14,7 +14,7 @@ class MockBlobStorage(BlobStorage):
     async def list(self, folder: str):
         return self._blobs
     async def download(self, pathname: str):
-        pass
+        return b"test content"
     async def upload(self, pathname: str, content: bytes):
         pass
 
