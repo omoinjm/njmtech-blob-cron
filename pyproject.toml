@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "njm-blob-cron"
+version = "0.1.0"
+description = "A cron job to scan Vercel Blob Storage and transform text files to markdown using AI."
+authors = ["Gemini <gemini@google.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^1.0.0"
+vercel-blob = "^0.16.1"
+agno = "0.0.2"
+ollama = "^0.2.0"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.3"
