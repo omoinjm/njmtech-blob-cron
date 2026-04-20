@@ -53,7 +53,8 @@ class VercelBlobStorage(BlobStorage):
                     if not folder or pathname.startswith(folder):
                         blobs.append({
                             'pathname': pathname,
-                            'url': b.get('url', '')
+                            'txt_url': b.get('txt_url'),
+                            'md_url': b.get('md_url')
                         })
                 
                 return blobs
@@ -94,14 +95,15 @@ class VercelBlobStorage(BlobStorage):
                 # The custom API seems to prepend ROOT_SCAN_FOLDER and 
                 # treats 'blob_path' as the target directory.
                 
-                # Strip the root folder from the pathname if present
+                # Strip the root folder from the pathname if present to get clean_path
                 clean_path = pathname
                 prefix = f"{ROOT_SCAN_FOLDER}/"
                 if pathname.startswith(prefix):
                     clean_path = pathname[len(prefix):]
                 
-                # Use the parent directory of the clean path as target_dir
-                target_dir = os.path.dirname(clean_path)
+                # We want the API to see the full path (including ROOT_SCAN_FOLDER) 
+                # as the directory for tracking purposes.
+                target_dir = os.path.dirname(pathname)
                 filename = os.path.basename(clean_path)
                 
                 target_url = f"{self.base_url}/api/v1/blob/upload"

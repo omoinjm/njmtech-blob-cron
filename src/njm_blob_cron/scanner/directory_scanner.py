@@ -1,4 +1,5 @@
 import asyncio
+import os
 from njm_blob_cron.blob_storage.base import BlobStorage
 from njm_blob_cron.processing.base import FileProcessor
 from njm_blob_cron.config import ROOT_SCAN_FOLDER
@@ -26,32 +27,16 @@ class DirectoryScanner:
     async def scan_and_process(self):
         """
         Starts the scanning and processing workflow.
-        1. Lists all files from the root folder.
-        2. Groups files by their parent directory.
-        3. Identifies all qualifying files from those directories.
-        4. Creates concurrent tasks to process each qualifying file.
         """
         print(f"Starting scan in root folder: '{ROOT_SCAN_FOLDER}'")
-        all_blobs = await self.blob_storage.list(folder=ROOT_SCAN_FOLDER)
-
-        directories = defaultdict(list)
-        for blob in all_blobs:
-            pathname = blob.get('pathname', '')
-            
-            # Ignore malformed paths with duplicated root folder
-            if pathname.count(f"{ROOT_SCAN_FOLDER}/") > 1:
-                continue
-                
-            directory = '/'.join(pathname.split('/')[:-1])
-            if directory:
-                directories[directory].append(blob)
+        directories = await self.blob_storage.list(folder=ROOT_SCAN_FOLDER)
 
         print(f"Found {len(directories)} directories to evaluate.")
 
         # Identify all files that need processing
         files_to_process = []
-        for directory, files in directories.items():
-            qualifying_file = self._get_qualifying_file(directory, files)
+        for dir_record in directories:
+            qualifying_file = self._get_qualifying_file(dir_record)
             if qualifying_file:
                 files_to_process.append(qualifying_file)
 
@@ -65,32 +50,37 @@ class DirectoryScanner:
         
         print("Scan finished.")
 
-    def _get_qualifying_file(self, directory: str, files: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _get_qualifying_file(self, dir_record: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Applies file evaluation rules. Returns the file to be processed if the
-        directory qualifies, otherwise returns None.
+        Applies file evaluation rules to a directory record.
         """
+        directory = dir_record.get('pathname', 'Unknown')
         print(f"Evaluating directory: '{directory}'")
         
-        # Results (.md or .md.txt)
-        result_files = [f for f in files if f['pathname'].lower().endswith('.md') or f['pathname'].lower().endswith('.md.txt')]
-        # Transcripts (.txt but NOT .md.txt)
-        transcript_files = [f for f in files if f['pathname'].lower().endswith('.txt') and not f['pathname'].lower().endswith('.md.txt')]
+        txt_url = dir_record.get('txt_url')
+        md_url = dir_record.get('md_url')
 
-        if result_files:
-            print(f"  [SKIP] Directory contains a processed file: {result_files[0]['pathname']}")
+        if md_url:
+            print(f"  [SKIP] Directory already contains a processed file (.md).")
             return None
 
-        if not transcript_files:
-            print(f"  [SKIP] Directory does not contain any transcript files (.txt).")
-            return None
-
-        if len(transcript_files) == 1:
-            file_to_process = transcript_files[0]
-            print(f"  [QUALIFIES] Found single transcript file: {file_to_process['pathname']}")
-            return file_to_process
+        if txt_url:
+            # We construct a filename for the transcript. 
+            # The API doesn't give the filename separately, so we derive it or use a default.
+            # Based on logs, it's usually yt-transcribe_...txt or transcript.txt
+            filename = os.path.basename(txt_url)
+            
+            # The _process_file method needs 'pathname' (full target path) and 'url' (download link)
+            # We'll use the directory path + derived filename for the source pathname
+            source_pathname = f"{directory}/{filename}"
+            
+            print(f"  [QUALIFIES] Found transcript file: {source_pathname}")
+            return {
+                'pathname': source_pathname,
+                'url': txt_url
+            }
         
-        print(f"  [SKIP] Directory contains multiple transcript files ({len(transcript_files)} files).")
+        print(f"  [SKIP] Directory does not contain any transcript files (.txt).")
         return None
 
     async def _process_file(self, file_to_process: Dict[str, Any]):
