@@ -4,7 +4,7 @@ import os
 import httpx
 
 from njm_blob_cron.blob_storage.base import BlobStorage
-from njm_blob_cron.config import VERCEL_BLOB_TOKEN, BLOB_API_URL
+from njm_blob_cron.config import VERCEL_BLOB_TOKEN, BLOB_API_URL, ROOT_SCAN_FOLDER
 
 class VercelBlobStorage(BlobStorage):
     """
@@ -61,19 +61,20 @@ class VercelBlobStorage(BlobStorage):
             print(f"Error listing blobs in folder '{folder}': {e}")
             return []
 
-    async def download(self, pathname: str) -> bytes:
+    async def download(self, pathname: str, url: str = None) -> bytes:
         """
         Downloads a blob's content.
         """
         try:
-            # First we need the URL for the blob. We'll find it by listing.
-            blobs = await self.list(folder=pathname)
-            match = next((b for b in blobs if b['pathname'] == pathname), None)
-            
-            if not match:
-                raise FileNotFoundError(f"Blob with pathname '{pathname}' not found.")
-            
-            url = match['url']
+            # If a URL is not provided, fetch it by listing.
+            if not url:
+                blobs = await self.list(folder=pathname)
+                match = next((b for b in blobs if b['pathname'] == pathname), None)
+                
+                if not match:
+                    raise FileNotFoundError(f"Blob with pathname '{pathname}' not found.")
+                
+                url = match['url']
             
             # Fetch content via HTTP GET
             async with httpx.AsyncClient() as client:
@@ -90,13 +91,26 @@ class VercelBlobStorage(BlobStorage):
         """
         try:
             async with httpx.AsyncClient() as client:
-                # The custom API uses POST /api/v1/blob/upload
-                # It expects 'blob_path' in query and 'file' in multipart body
+                # The custom API seems to prepend ROOT_SCAN_FOLDER and 
+                # treats 'blob_path' as the target directory.
+                
+                # Strip the root folder from the pathname if present
+                clean_path = pathname
+                prefix = f"{ROOT_SCAN_FOLDER}/"
+                if pathname.startswith(prefix):
+                    clean_path = pathname[len(prefix):]
+                
+                # Use the parent directory of the clean path as target_dir
+                target_dir = os.path.dirname(clean_path)
+                filename = os.path.basename(clean_path)
+                
                 target_url = f"{self.base_url}/api/v1/blob/upload"
                 
-                files = {'file': (os.path.basename(pathname), content)}
+                # The API expects 'blob_path' in query (the directory) 
+                # and 'file' in multipart body (the filename and content)
+                files = {'file': (filename, content, 'text/markdown')}
                 params = {
-                    "blob_path": pathname,
+                    "blob_path": target_dir,
                     "allow_overwrite": "true"
                 }
                 

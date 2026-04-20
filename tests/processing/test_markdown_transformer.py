@@ -7,7 +7,7 @@ import os
 class MockBlobStorage(BlobStorage):
     async def list(self, folder: str):
         pass
-    async def download(self, pathname: str):
+    async def download(self, pathname: str, url: str = None):
         pass
     async def upload(self, pathname: str, content: bytes):
         pass

@@ -37,6 +37,11 @@ class DirectoryScanner:
         directories = defaultdict(list)
         for blob in all_blobs:
             pathname = blob.get('pathname', '')
+            
+            # Ignore malformed paths with duplicated root folder
+            if pathname.count(f"{ROOT_SCAN_FOLDER}/") > 1:
+                continue
+                
             directory = '/'.join(pathname.split('/')[:-1])
             if directory:
                 directories[directory].append(blob)
@@ -67,21 +72,18 @@ class DirectoryScanner:
         """
         print(f"Evaluating directory: '{directory}'")
         
-        file_count = len(files)
-        txt_files = [f for f in files if f['pathname'].lower().endswith('.txt')]
-        md_files = [f for f in files if f['pathname'].lower().endswith('.md')]
+        # Results (.md or .md.txt)
+        result_files = [f for f in files if f['pathname'].lower().endswith('.md') or f['pathname'].lower().endswith('.md.txt')]
+        # Transcripts (.txt but NOT .md.txt)
+        transcript_files = [f for f in files if f['pathname'].lower().endswith('.txt') and not f['pathname'].lower().endswith('.md.txt')]
 
-        if md_files:
-            print(f"  [SKIP] Directory contains a .md file: {md_files[0]['pathname']}")
+        if result_files:
+            print(f"  [SKIP] Directory contains a processed file: {result_files[0]['pathname']}")
             return None
 
-        if file_count > 1:
-            print(f"  [SKIP] Directory contains more than one file ({file_count} files).")
-            return None
-
-        if file_count == 1 and len(txt_files) == 1:
-            file_to_process = txt_files[0]
-            print(f"  [QUALIFIES] Found single .txt file: {file_to_process['pathname']}")
+        if len(transcript_files) == 1:
+            file_to_process = transcript_files[0]
+            print(f"  [QUALIFIES] Found single transcript file: {file_to_process['pathname']}")
             return file_to_process
         
         print(f"  [SKIP] Directory does not meet processing criteria.")
@@ -92,9 +94,10 @@ class DirectoryScanner:
         Downloads, processes, and handles errors for a single file.
         """
         pathname = file_to_process['pathname']
+        url = file_to_process.get('url')
         try:
             print(f"  [PROCESS] Starting processing for: {pathname}")
-            file_content_bytes = await self.blob_storage.download(pathname)
+            file_content_bytes = await self.blob_storage.download(pathname, url=url)
             file_content = file_content_bytes.decode('utf-8')
             
             await self.file_processor.process(file_content, pathname)

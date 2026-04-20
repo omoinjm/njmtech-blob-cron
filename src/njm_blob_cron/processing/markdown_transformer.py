@@ -47,7 +47,8 @@ class MarkdownTransformer(FileProcessor):
         try:
             response = await self.client.chat(
                 model=self.model_id,
-                messages=[{'role': 'user', 'content': prompt}]
+                messages=[{'role': 'user', 'content': prompt}],
+                options={'num_ctx': 8192}
             )
             
             markdown_content = response['message']['content']

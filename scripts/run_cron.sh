@@ -12,10 +12,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR" || exit
 
-echo "[$(date)] CRON START: Running NJMTech Blob Cron Job"
+# Use flock to ensure only one instance of the script runs at a time.
+(
+  flock -n 200 || exit 1
+  echo "[$(date)] CRON START: Running NJMTech Blob Cron Job"
 
-# Execute the main python script using python3.
-python3 main.py
+  # Execute the main python script using python3.
+  PYTHONUNBUFFERED=1 python3 main.py
 
-echo "[$(date)] CRON FINISHED: NJMTech Blob Cron Job"
+  echo "[$(date)] CRON FINISHED: NJMTech Blob Cron Job"
+) 200>/var/lock/njmtech-blob-cron.lock
 echo "----------------------------------------"

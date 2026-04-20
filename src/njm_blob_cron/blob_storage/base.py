@@ -22,12 +22,13 @@ class BlobStorage(ABC):
         pass
 
     @abstractmethod
-    async def download(self, pathname: str) -> bytes:
+    async def download(self, pathname: str, url: str = None) -> bytes:
         """
         Downloads the content of a blob.
 
         Args:
             pathname: The full path to the blob.
+            url: The optional direct download URL for the blob.
 
         Returns:
             The content of the blob as bytes.
