@@ -48,3 +48,16 @@ class BlobStorage(ABC):
             A dictionary representing the metadata of the uploaded blob.
         """
         pass
+
+    @abstractmethod
+    async def delete(self, pathname: str) -> bool:
+        """
+        Deletes a blob.
+
+        Args:
+            pathname: The full path to the blob.
+
+        Returns:
+            True if deletion was successful, False otherwise.
+        """
+        pass

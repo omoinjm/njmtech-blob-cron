@@ -81,12 +81,16 @@ class DirectoryScanner:
             print(f"  [SKIP] Directory contains a processed file: {result_files[0]['pathname']}")
             return None
 
+        if not transcript_files:
+            print(f"  [SKIP] Directory does not contain any transcript files (.txt).")
+            return None
+
         if len(transcript_files) == 1:
             file_to_process = transcript_files[0]
             print(f"  [QUALIFIES] Found single transcript file: {file_to_process['pathname']}")
             return file_to_process
         
-        print(f"  [SKIP] Directory does not meet processing criteria.")
+        print(f"  [SKIP] Directory contains multiple transcript files ({len(transcript_files)} files).")
         return None
 
     async def _process_file(self, file_to_process: Dict[str, Any]):

@@ -11,6 +11,8 @@ class MockBlobStorage(BlobStorage):
         pass
     async def upload(self, pathname: str, content: bytes):
         pass
+    async def delete(self, pathname: str):
+        pass
 
 @pytest.fixture
 def markdown_transformer():

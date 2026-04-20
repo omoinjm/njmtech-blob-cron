@@ -17,6 +17,8 @@ class MockBlobStorage(BlobStorage):
         pass
     async def upload(self, pathname: str, content: bytes):
         pass
+    async def delete(self, pathname: str):
+        pass
 
 @pytest.mark.asyncio
 async def test_scan_and_process_qualifying_file():
@@ -24,7 +26,8 @@ async def test_scan_and_process_qualifying_file():
     Tests that the scanner correctly identifies and processes a single .txt file
     in a directory.
     """
-    blobs = [{'pathname': 'test_dir/test.txt'}]
+    # Note: the scanner now filters out duplicated root folders
+    blobs = [{'pathname': 'njmtech-blob-api/test_dir/test.txt'}]
     blob_storage = MockBlobStorage(blobs)
     file_processor = MockFileProcessor()
     scanner = DirectoryScanner(blob_storage, file_processor)
@@ -41,14 +44,36 @@ async def test_scan_and_process_qualifying_file():
     await scanner.scan_and_process()
 
     assert len(processed_files) == 1
-    assert processed_files[0] == 'test_dir/test.txt'
+    assert processed_files[0] == 'njmtech-blob-api/test_dir/test.txt'
 
 @pytest.mark.asyncio
 async def test_scan_and_process_non_qualifying_file_md():
     """
     Tests that the scanner skips directories containing .md files.
     """
-    blobs = [{'pathname': 'test_dir/test.md'}]
+    blobs = [
+        {'pathname': 'njmtech-blob-api/test_dir/test.txt'},
+        {'pathname': 'njmtech-blob-api/test_dir/test.md'}
+    ]
+    blob_storage = MockBlobStorage(blobs)
+    file_processor = MockFileProcessor()
+    scanner = DirectoryScanner(blob_storage, file_processor)
+
+    processed_files = []
+    async def mock_process(file_content, source_pathname):
+        processed_files.append(source_pathname)
+    file_processor.process = mock_process
+    
+    await scanner.scan_and_process()
+
+    assert len(processed_files) == 0
+
+@pytest.mark.asyncio
+async def test_scan_and_process_skip_no_transcript():
+    """
+    Tests that the scanner skips directories without any transcript files.
+    """
+    blobs = [{'pathname': 'njmtech-blob-api/test_dir/orphaned.md'}]
     blob_storage = MockBlobStorage(blobs)
     file_processor = MockFileProcessor()
     scanner = DirectoryScanner(blob_storage, file_processor)

@@ -53,6 +53,18 @@ class MarkdownTransformer(FileProcessor):
             
             markdown_content = response['message']['content']
             
+            # Strip markdown code blocks if the model wrapped the response
+            if markdown_content.startswith("```markdown"):
+                markdown_content = markdown_content.removeprefix("```markdown")
+                if markdown_content.endswith("```"):
+                    markdown_content = markdown_content.removesuffix("```")
+            elif markdown_content.startswith("```"):
+                markdown_content = markdown_content.removeprefix("```")
+                if markdown_content.endswith("```"):
+                    markdown_content = markdown_content.removesuffix("```")
+            
+            markdown_content = markdown_content.strip()
+            
             # Determine the output path
             base, _ = os.path.splitext(source_pathname)
             output_pathname = f"{base}.md"

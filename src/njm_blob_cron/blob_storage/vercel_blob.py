@@ -129,3 +129,44 @@ class VercelBlobStorage(BlobStorage):
         except Exception as e:
             print(f"Error uploading blob '{pathname}': {e}")
             raise
+
+    async def delete(self, pathname: str) -> bool:
+        """
+        Deletes a blob using the /api/v1/blob/delete endpoint.
+        """
+        try:
+            from njm_blob_cron.config import ROOT_SCAN_FOLDER
+            
+            async with httpx.AsyncClient() as client:
+                target_url = f"{self.base_url}/api/v1/blob/delete"
+                
+                # Try full path first
+                response = await client.delete(
+                    target_url,
+                    params={"blob_path": pathname},
+                    headers=self.headers
+                )
+                
+                if response.status_code in (200, 204):
+                    return True
+                
+                # If 404, try cleaned path
+                clean_path = pathname
+                prefix = f"{ROOT_SCAN_FOLDER}/"
+                if pathname.startswith(prefix):
+                    clean_path = pathname[len(prefix):]
+                
+                if clean_path != pathname:
+                    response = await client.delete(
+                        target_url,
+                        params={"blob_path": clean_path},
+                        headers=self.headers
+                    )
+                    if response.status_code in (200, 204):
+                        return True
+
+                print(f"Error deleting blob (Status {response.status_code}): {response.text}")
+                return False
+        except Exception as e:
+            print(f"Error deleting blob '{pathname}': {e}")
+            return False
