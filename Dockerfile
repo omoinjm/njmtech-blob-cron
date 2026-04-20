@@ -1,13 +1,10 @@
-FROM ubuntu:24.04
+FROM python:3.11-slim
 
-# Set non-interactive front-end
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install dependencies
-RUN apt-get update && apt-get install -y cron python3.9 python3-pip
+# Install system dependencies
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
 
 # Install poetry
-RUN pip3 install poetry
+RUN pip install poetry
 
 # Set the working directory in the container
 WORKDIR /app
@@ -19,8 +16,8 @@ COPY . .
 RUN chmod +x /app/scripts/run_cron.sh
 
 # Install python dependencies
-# Note: A poetry.lock file is required. Generate it by running `poetry lock`.
-RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
+ENV POETRY_HTTP_TIMEOUT=300
+RUN poetry config virtualenvs.create false && poetry install --without dev --no-interaction --no-ansi
 
 # Copy crontab file
 COPY crontab /etc/cron.d/blob_cron
@@ -32,4 +29,5 @@ RUN chmod 0644 /etc/cron.d/blob_cron
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-ENTRYPOINT ["cron", "-f"]
+# printenv dumps env vars to /etc/environment which cron reads
+CMD printenv > /etc/environment && cron && tail -f /var/log/cron.log

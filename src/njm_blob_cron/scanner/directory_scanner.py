@@ -50,13 +50,13 @@ class DirectoryScanner:
             if qualifying_file:
                 files_to_process.append(qualifying_file)
 
-        # Create concurrent tasks for processing
+        # Process files sequentially
         if not files_to_process:
             print("No files to process.")
         else:
-            print(f"Found {len(files_to_process)} files to process concurrently.")
-            tasks = [self._process_file(file) for file in files_to_process]
-            await asyncio.gather(*tasks)
+            print(f"Found {len(files_to_process)} files to process sequentially.")
+            for file in files_to_process:
+                await self._process_file(file)
         
         print("Scan finished.")
 
