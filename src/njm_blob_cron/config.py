@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Vercel Blob Storage Configuration
-BLOB_API_URL = os.getenv("BLOB_API_URL")
-VERCEL_BLOB_TOKEN = os.getenv("VERCEL_BLOB_TOKEN")
+BLOB_API_URL = os.getenv("VERCEL_BLOB_API_URL")
+VERCEL_BLOB_TOKEN = os.getenv("VERCEL_BLOB_API_TOKEN")
 
 # AI Model Configuration (Ollama)
 OLLAMA_MODEL_ID = os.getenv("OLLAMA_MODEL_ID", "llama3.2")
