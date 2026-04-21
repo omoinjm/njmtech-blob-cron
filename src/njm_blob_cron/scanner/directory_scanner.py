@@ -1,8 +1,10 @@
 import asyncio
 import os
+import logging
 from njm_blob_cron.blob_storage.base import BlobStorage
 from njm_blob_cron.processing.base import FileProcessor
 from njm_blob_cron.config import ROOT_SCAN_FOLDER
+from njm_blob_cron.database import db_pool
 from collections import defaultdict
 from typing import List, Dict, Any
 
@@ -94,7 +96,18 @@ class DirectoryScanner:
             file_content_bytes = await self.blob_storage.download(pathname, url=url)
             file_content = file_content_bytes.decode('utf-8')
             
-            await self.file_processor.process(file_content, pathname)
+            notes_url = await self.file_processor.process(file_content, pathname)
+
+            if notes_url:
+                print(f"  [DB_UPDATE] Updating database for: {pathname}")
+                query = """
+                    UPDATE media_items 
+                    SET notes_url = $1 
+                    WHERE transcript_url = $2 AND notes_url IS NULL;
+                """
+                await db_pool.execute(query, notes_url, url)
+                print(f"  [SUCCESS] Database updated with notes_url: {notes_url}")
+
         except Exception as e:
             print(f"  [ERROR] Failed to process file {pathname}: {e}")
 

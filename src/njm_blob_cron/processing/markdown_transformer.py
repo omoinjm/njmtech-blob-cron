@@ -36,7 +36,7 @@ class MarkdownTransformer(FileProcessor):
         )
         return prompt
 
-    async def process(self, file_content: str, source_pathname: str) -> None:
+    async def process(self, file_content: str, source_pathname: str) -> str:
         """
         Transforms the given text content into Markdown and saves it back to blob storage.
         """
@@ -72,12 +72,14 @@ class MarkdownTransformer(FileProcessor):
             print(f"Saving transformed content to '{output_pathname}'...")
             
             # Upload the new markdown file
-            await self.blob_storage.upload(
+            upload_result = await self.blob_storage.upload(
                 pathname=output_pathname,
                 content=markdown_content.encode('utf-8')
             )
             
-            print(f"Successfully transformed and saved '{output_pathname}'.")
+            notes_url = upload_result.get('url')
+            print(f"Successfully transformed and saved '{output_pathname}'. URL: {notes_url}")
+            return notes_url
 
         except Exception as e:
             print(f"Error during AI transformation for '{source_pathname}': {e}")

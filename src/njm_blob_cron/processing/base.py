@@ -8,7 +8,7 @@ class FileProcessor(ABC):
     """
 
     @abstractmethod
-    async def process(self, file_content: str, source_pathname: str) -> None:
+    async def process(self, file_content: str, source_pathname: str) -> str:
         """
         Processes the given file content.
 
@@ -16,5 +16,8 @@ class FileProcessor(ABC):
             file_content: The content of the file to process.
             source_pathname: The original path of the source file, which can
                              be used to determine the output path.
+        
+        Returns:
+            The URL of the processed file, or None if not applicable.
         """
         pass

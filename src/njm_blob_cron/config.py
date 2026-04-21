@@ -15,12 +15,16 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:1143
 # Scanner Configuration
 ROOT_SCAN_FOLDER = os.getenv("ROOT_SCAN_FOLDER", "njmtech-blob-api")
 
+# Database Configuration
+POSTGRES_URL = os.getenv("POSTGRES_URL")
+
 
 def validate_config():
     """Validates that all required environment variables are set."""
     required_vars = [
         "VERCEL_BLOB_TOKEN",
         "BLOB_API_URL",
+        "POSTGRES_URL",
     ]
     missing_vars = [var for var in required_vars if not globals()[var]]
     if missing_vars:

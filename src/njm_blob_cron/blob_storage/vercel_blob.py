@@ -127,7 +127,9 @@ class VercelBlobStorage(BlobStorage):
                     print(f"Error uploading blob (Status {response.status_code}): {response.text}")
                     raise Exception(f"Upload failed: {response.text}")
                 
-                return response.json()
+                result = response.json()
+                # The response structure from backend logic shows 'url' is in the root of result
+                return result
         except Exception as e:
             print(f"Error uploading blob '{pathname}': {e}")
             raise

@@ -4,6 +4,7 @@ from njm_blob_cron.config import validate_config
 from njm_blob_cron.blob_storage.vercel_blob import VercelBlobStorage
 from njm_blob_cron.processing.markdown_transformer import MarkdownTransformer
 from njm_blob_cron.scanner.directory_scanner import DirectoryScanner
+from njm_blob_cron.database import db_pool
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,6 +38,8 @@ async def main():
         logging.error(f"Configuration error: {e}")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}", exc_info=True)
+    finally:
+        await db_pool.disconnect()
     
     logging.info("NJMTech Blob Cron job finished.")
 
