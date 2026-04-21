@@ -101,9 +101,9 @@ class VercelBlobStorage(BlobStorage):
                 if pathname.startswith(prefix):
                     clean_path = pathname[len(prefix):]
                 
-                # We want the API to see the full path (including ROOT_SCAN_FOLDER) 
-                # as the directory for tracking purposes.
-                target_dir = os.path.dirname(pathname)
+                # The backend logic you shared already adds 'njmtech-blob-api/'
+                # So we send the directory path WITHOUT the root folder.
+                target_dir = os.path.dirname(clean_path)
                 filename = os.path.basename(clean_path)
                 
                 target_url = f"{self.base_url}/api/v1/blob/upload"
